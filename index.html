@@ -1,0 +1,2817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>PowerWatchNG | Nigeria's Complete Grid Intelligence Platform</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Real-time monitoring of Nigeria's complete power ecosystem. Track generation plants, distribution companies, grid status, and power allocation. Live data from GenCos, DisCos, and national grid.">
+    <meta name="keywords" content="Nigeria power grid, GenCo monitoring, DisCo tracking, grid collapse, national grid Nigeria, electricity generation, power distribution, NEPA, TCN, real-time grid status">
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.0/build/global/luxon.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PowerWatchNG",
+      "description": "Real-time monitoring platform for Nigeria's complete power grid ecosystem",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "NGN"
+      }
+    }
+    </script>
+    
+    <style>
+        /* ============================================
+           DESIGN SYSTEM - BOLD TECHNICAL AESTHETIC
+           ============================================ */
+        
+        :root {
+            /* Core Color Palette - Technical Excellence */
+            --electric-blue: #0ea5e9;
+            --volt-yellow: #fbbf24;
+            --power-green: #10b981;
+            --alert-red: #ef4444;
+            --warning-amber: #f59e0b;
+            --deep-navy: #0f172a;
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-400: #94a3b8;
+            --slate-200: #e2e8f0;
+            --white: #ffffff;
+            
+            /* Semantic Colors */
+            --primary: var(--electric-blue);
+            --success: var(--power-green);
+            --warning: var(--warning-amber);
+            --danger: var(--alert-red);
+            --accent: var(--volt-yellow);
+            
+            /* Background Layers */
+            --bg-primary: #0a0f1e;
+            --bg-secondary: var(--slate-900);
+            --bg-tertiary: var(--slate-800);
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --bg-card-hover: rgba(51, 65, 85, 0.9);
+            
+            /* Text Colors */
+            --text-primary: var(--white);
+            --text-secondary: var(--slate-400);
+            --text-muted: var(--slate-600);
+            
+            /* Effects */
+            --border-subtle: rgba(148, 163, 184, 0.1);
+            --border-medium: rgba(148, 163, 184, 0.2);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
+            
+            /* Grid System */
+            --grid-pattern: 24px;
+            
+            /* Timing */
+            --transition-fast: 150ms;
+            --transition-base: 250ms;
+            --transition-slow: 400ms;
+        }
+        
+        /* ============================================
+           RESET & BASE STYLES
+           ============================================ */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* Animated Technical Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(14, 165, 233, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
+            background-size: var(--grid-pattern) var(--grid-pattern);
+            pointer-events: none;
+            z-index: 0;
+            animation: gridFlow 30s linear infinite;
+        }
+        
+        @keyframes gridFlow {
+            0% { transform: translateY(0) translateX(0); }
+            100% { transform: translateY(var(--grid-pattern)) translateX(var(--grid-pattern)); }
+        }
+        
+        /* Gradient Overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* ============================================
+           LAYOUT STRUCTURE
+           ============================================ */
+        
+        .app-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        /* ============================================
+           HEADER - UNIFIED NAVIGATION
+           ============================================ */
+        
+        .main-header {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-medium);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--electric-blue), var(--volt-yellow));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--deep-navy);
+            box-shadow: var(--shadow-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .brand-text h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--electric-blue), var(--volt-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.25rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            border: none;
+            font-family: 'Space Mono', monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: var(--deep-navy);
+        }
+        
+        .btn-primary:hover {
+            background: var(--electric-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-medium);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary);
+        }
+        
+        /* ============================================
+           TAB NAVIGATION
+           ============================================ */
+        
+        .tab-navigation {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 97px;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tab-list {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        
+        .tab-list::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tab-button {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            font-family: 'Syne', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tab-button:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+        
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn var(--transition-slow);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ============================================
+           DASHBOARD CARDS
+           ============================================ */
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+        
+        .stat-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-medium);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .stat-icon.blue { background: rgba(14, 165, 233, 0.1); color: var(--electric-blue); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--power-green); }
+        .stat-icon.yellow { background: rgba(251, 191, 36, 0.1); color: var(--volt-yellow); }
+        .stat-icon.red { background: rgba(239, 68, 68, 0.1); color: var(--alert-red); }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-trend {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .trend-up { color: var(--power-green); }
+        .trend-down { color: var(--alert-red); }
+        .trend-neutral { color: var(--text-secondary); }
+        
+        /* ============================================
+           STATUS INDICATORS
+           ============================================ */
+        
+        .status-banner {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .status-pulse {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .status-pulse::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        
+        .status-pulse.online {
+            background: var(--power-green);
+        }
+        
+        .status-pulse.online::before {
+            border: 2px solid var(--power-green);
+        }
+        
+        .status-pulse.weak {
+            background: var(--warning-amber);
+        }
+        
+        .status-pulse.weak::before {
+            border: 2px solid var(--warning-amber);
+        }
+        
+        .status-pulse.offline {
+            background: var(--alert-red);
+        }
+        
+        .status-pulse.offline::before {
+            border: 2px solid var(--alert-red);
+        }
+        
+        @keyframes pulse-ring {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+        
+        .status-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        /* ============================================
+           DATA TABLES
+           ============================================ */
+        
+        .data-table-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .table-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .table-controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-input {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            width: 250px;
+            transition: all var(--transition-base);
+            font-family: 'Space Mono', monospace;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        
+        .data-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: left;
+            padding: 1rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+        }
+        
+        .data-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+        
+        .data-table tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        /* ============================================
+           CHARTS & VISUALIZATIONS
+           ============================================ */
+        
+        .chart-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .chart-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        /* ============================================
+           LOADING STATES
+           ============================================ */
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .loading-spinner {
+            width: 64px;
+            height: 64px;
+            border: 4px solid var(--border-subtle);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .brand-text h1 {
+                font-size: 1.5rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-value {
+                font-size: 1.75rem;
+            }
+            
+            .tab-navigation {
+                top: 85px;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .table-controls {
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+        
+        /* ============================================
+           UTILITY CLASSES
+           ============================================ */
+        
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .hidden { display: none; }
+        
+        /* Station Cards for GenCo View */
+        .station-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* ============================================
+           NEWS & ADS TICKER
+           ============================================ */
+        
+        #newsAdsTicker {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(135deg, var(--slate-900) 0%, var(--bg-primary) 100%);
+            border-top: 2px solid var(--primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #newsAdsTickerTrack {
+            white-space: nowrap;
+            padding-left: 100%;
+            will-change: transform;
+            font-weight: 400;
+        }
+        
+        #newsAdsTickerTrack span {
+            margin-right: 60px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #newsAdsTickerTrack .emoji {
+            font-size: 16px;
+        }
+        
+        #newsAdsTickerTrack a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color var(--transition-base);
+        }
+        
+        #newsAdsTickerTrack a:hover {
+            color: var(--volt-yellow);
+            text-decoration: underline;
+        }
+        
+        .ticker-loading {
+            color: var(--text-secondary);
+        }
+        
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
+        }
+        
+        /* Add padding to main content to prevent ticker overlap */
+        .app-container {
+            padding-bottom: 60px;
+        }
+        
+        .station-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all var(--transition-base);
+        }
+        
+        .station-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-medium);
+            transform: translateY(-2px);
+        }
+        
+        .station-card.online {
+            border-left: 3px solid var(--power-green);
+        }
+        
+        .station-card.offline {
+            border-left: 3px solid var(--alert-red);
+        }
+        
+        .station-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .station-type {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+        
+        .station-output {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        /* FAQ Section */
+        .faq-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .faq-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .faq-item {
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 1.5rem 0;
+        }
+        
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        
+        .faq-question {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .faq-answer {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        
+        .faq-highlight {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        /* ============================================
+           SYSTEM HEALTH & REGIONAL DISTRIBUTION
+           ============================================ */
+        
+        .health-indicator {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        
+        .health-item {
+            display: grid;
+            grid-template-columns: 140px 1fr 60px;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .health-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .health-bar-container {
+            position: relative;
+            height: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+        }
+        
+        .health-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            transition: width 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .health-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .health-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: right;
+        }
+        
+        .region-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .region-item {
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-left: 3px solid var(--primary);
+            border-radius: 8px;
+            transition: all var(--transition-base);
+        }
+        
+        .region-item:hover {
+            background: var(--bg-card-hover);
+            border-left-color: var(--volt-yellow);
+            transform: translateX(4px);
+        }
+        
+        .region-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-family: 'Syne', sans-serif;
+        }
+        
+        .region-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .region-output {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .region-stations {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Header -->
+        <header class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="brand">
+                        <div class="brand-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="brand-text">
+                            <h1>PowerWatchNG</h1>
+                            <p>Complete Grid Intelligence</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="refreshAllBtn">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-secondary" id="exportBtn">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <div class="container">
+                <ul class="tab-list">
+                    <li>
+                        <button class="tab-button active" data-tab="overview">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button" data-tab="generation">
+                            <i class="fas fa-industry"></i> Generation (GenCos)
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button" data-tab="distribution">
+                            <i class="fas fa-network-wired"></i> Distribution (DisCos)
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button" data-tab="analytics">
+                            <i class="fas fa-chart-line"></i> Analytics
+                        </button>
+                    </li>
+                    <li>
+                        <button class="tab-button" data-tab="faq">
+                            <i class="fas fa-question-circle"></i> FAQ
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="container" style="padding-bottom: 3rem;">
+            
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <!-- Grid Status Banner -->
+                <div class="status-banner">
+                    <div class="status-indicator">
+                        <div class="status-pulse online" id="gridStatusPulse"></div>
+                        <div>
+                            <div class="status-text" id="gridStatusText">Grid Operational</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Last updated: <span id="lastUpdateTime">--:--</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-left: auto; font-size: 0.75rem; color: var(--text-secondary);">
+                        <i class="fas fa-info-circle"></i> Real-time data • Auto-refresh every 2-5 minutes
+                    </div>
+                </div>
+                
+                <!-- Key Stats Grid -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Total Generation</div>
+                            </div>
+                            <div class="stat-icon blue">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="totalGeneration">-- MW</div>
+                        <div class="stat-trend">
+                            <span id="generationTrend">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Total Distribution</div>
+                            </div>
+                            <div class="stat-icon green">
+                                <i class="fas fa-network-wired"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="totalDistribution">-- MW</div>
+                        <div class="stat-trend">
+                            <span id="distributionTrend">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Active Plants</div>
+                            </div>
+                            <div class="stat-icon yellow">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="activePlants">--</div>
+                        <div class="stat-trend">
+                            <span id="plantsStatus">-- of -- online</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Grid Efficiency</div>
+                            </div>
+                            <div class="stat-icon red">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="gridEfficiency">--%</div>
+                        <div class="stat-trend">
+                            <span id="efficiencyNote">Distribution vs Generation</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Comparison -->
+                <div class="data-table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Generation vs Distribution Snapshot</h3>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Generation (GenCos)</th>
+                                <th>Distribution (DisCos)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <tr>
+                                <td>Total Capacity</td>
+                                <td id="compGenTotal">-- MW</td>
+                                <td id="compDiscoTotal">-- MW</td>
+                                <td id="compStatus">--</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Charts Row -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Generation by Fuel Type</h3>
+                            <p class="chart-subtitle">Current power output distribution</p>
+                        </div>
+                        <div id="fuelTypeChart" style="min-height: 350px;"></div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Top Distribution Companies</h3>
+                            <p class="chart-subtitle">Power allocation by DisCo</p>
+                        </div>
+                        <div id="discoChart" style="min-height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Generation Tab -->
+            <div class="tab-content" id="generation">
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Total Output</div>
+                            </div>
+                            <div class="stat-icon blue">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="genTotalOutput">-- MW</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Online Plants</div>
+                            </div>
+                            <div class="stat-icon green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="genOnlinePlants">--</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Offline Plants</div>
+                            </div>
+                            <div class="stat-icon red">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="genOfflinePlants">--</div>
+                    </div>
+                </div>
+                
+                <!-- System Health & Regional Distribution -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-heartbeat"></i> System Health
+                            </h3>
+                            <p class="chart-subtitle">Real-time grid health indicators</p>
+                        </div>
+                        <div class="health-indicator" style="padding: 1rem;">
+                            <div class="health-item">
+                                <span class="health-label">Grid Stability</span>
+                                <div class="health-bar-container">
+                                    <div class="health-bar" id="stabilityBar" style="width: 0%"></div>
+                                </div>
+                                <span class="health-value" id="stabilityValue">0%</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Generation Capacity</span>
+                                <div class="health-bar-container">
+                                    <div class="health-bar" id="capacityBar" style="width: 0%"></div>
+                                </div>
+                                <span class="health-value" id="capacityValue">0%</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Station Availability</span>
+                                <div class="health-bar-container">
+                                    <div class="health-bar" id="availabilityBar" style="width: 0%"></div>
+                                </div>
+                                <span class="health-value" id="availabilityValue">0%</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Fuel Diversity</span>
+                                <div class="health-bar-container">
+                                    <div class="health-bar" id="diversityBar" style="width: 0%"></div>
+                                </div>
+                                <span class="health-value" id="diversityValue">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-map-marked-alt"></i> Regional Distribution
+                            </h3>
+                            <p class="chart-subtitle">Power generation by region</p>
+                        </div>
+                        <div class="region-grid" id="regionGrid" style="padding: 1rem;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Generation Plants</h3>
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" id="gencoSearch" placeholder="Search plants...">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="stationGrid" class="station-grid">
+                        <!-- Stations will be loaded here -->
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Top 5 Generation Plants</h3>
+                        <p class="chart-subtitle">Highest power output</p>
+                    </div>
+                    <div id="topStationsChart" style="min-height: 350px;"></div>
+                </div>
+            </div>
+            
+            <!-- Distribution Tab -->
+            <div class="tab-content" id="distribution">
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Total Allocation</div>
+                            </div>
+                            <div class="stat-icon blue">
+                                <i class="fas fa-plug"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="discoTotalAllocation">-- MW</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Average per DisCo</div>
+                            </div>
+                            <div class="stat-icon green">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="discoAverage">-- MW</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Peak Today</div>
+                            </div>
+                            <div class="stat-icon yellow">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="discoPeak">-- MW</div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Distribution Companies</h3>
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" id="discoSearch" placeholder="Search DisCos...">
+                            </div>
+                        </div>
+                    </div>
+                    <table class="data-table" id="discoTable">
+                        <thead>
+                            <tr>
+                                <th>DisCo</th>
+                                <th>Allocation (MW)</th>
+                                <th>% of Total</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="discoTableBody">
+                            <!-- DisCo data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Distribution Trend</h3>
+                        <p class="chart-subtitle">Power allocation over time</p>
+                    </div>
+                    <div id="discoTrendChart" style="min-height: 350px;"></div>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div class="tab-content" id="analytics">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Historical Performance</h3>
+                        <p class="chart-subtitle">Last 30 distribution readings (generation trend simulated)</p>
+                    </div>
+                    <div id="historicalChart" style="min-height: 400px;"></div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Generation by Type</h3>
+                            <p class="chart-subtitle">Energy source distribution</p>
+                        </div>
+                        <div id="generationTypeChart" style="min-height: 350px;"></div>
+                    </div>
+                    
+                    <div class="data-table-container" style="margin-bottom: 0;">
+                        <div class="table-header">
+                            <h3 class="table-title">Performance Metrics</h3>
+                        </div>
+                        <table class="data-table">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Total Installed Capacity</strong></td>
+                                    <td class="text-right" id="installedCapacity">-- MW</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Current Utilization</strong></td>
+                                    <td class="text-right" id="utilizationRate">--%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Grid Losses</strong></td>
+                                    <td class="text-right" id="gridLosses">-- MW</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>System Frequency</strong></td>
+                                    <td class="text-right" id="systemFrequency">50 Hz (nominal)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQ Tab -->
+            <div class="tab-content" id="faq">
+                <div class="faq-section">
+                    <h2 class="faq-title">Frequently Asked Questions</h2>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">Is there light in Nigeria today?</h3>
+                        <div class="faq-answer">
+                            Based on the latest grid data, the current total power allocation is <span class="faq-highlight" id="faqCurrentPower">-- MW</span> as of <span class="faq-highlight" id="faqUpdateTime">--</span>. This represents the total power being distributed across all 11 distribution companies (DisCos) in Nigeria.
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">Has Nigeria's national grid collapsed?</h3>
+                        <div class="faq-answer">
+                            Grid collapse status: <span class="faq-highlight" id="faqCollapseStatus">Checking...</span><br><br>
+                            A grid collapse is only classified when both morning (8-9am) and evening (6-7pm) readings show sustained 0MW allocations. Short zero readings may indicate load balancing, switching operations, or temporary outages rather than a complete grid collapse.
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">How does Nigeria's power grid work?</h3>
+                        <div class="faq-answer">
+                            Nigeria's power grid operates in three main segments:<br><br>
+                            <strong>1. Generation (GenCos):</strong> Power generation companies produce electricity from various sources including hydro, gas, and thermal plants. Current total generation: <span class="faq-highlight" id="faqGeneration">-- MW</span><br><br>
+                            <strong>2. Transmission (TCN):</strong> The Transmission Company of Nigeria transmits high-voltage electricity from generation plants across the country through a network of transmission lines and substations.<br><br>
+                            <strong>3. Distribution (DisCos):</strong> Eleven distribution companies receive power from TCN and distribute it to end consumers across their designated coverage areas. Current total distribution: <span class="faq-highlight" id="faqDistribution">-- MW</span>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">What are GenCos and DisCos?</h3>
+                        <div class="faq-answer">
+                            <strong>GenCos (Generation Companies):</strong> These are power generation plants that produce electricity. Nigeria has multiple GenCos including Egbin, Kainji, Jebba, Shiroro, and several gas-powered plants. Currently, <span class="faq-highlight" id="faqActivePlants">--</span> plants are actively generating power.<br><br>
+                            <strong>DisCos (Distribution Companies):</strong> These are the 11 companies responsible for distributing electricity to consumers in different regions. They include Abuja, Benin, Eko, Enugu, Ibadan, Ikeja, Jos, Kaduna, Kano, Port Harcourt, and Yola DisCos.
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">Why is there a difference between generation and distribution?</h3>
+                        <div class="faq-answer">
+                            The difference between total generation and distribution (known as grid losses) occurs due to:<br>
+                            • Technical losses in transmission lines (resistance, heat)<br>
+                            • Transformation losses at substations<br>
+                            • Distribution network inefficiencies<br>
+                            • Load balancing and system constraints<br><br>
+                            Current efficiency: <span class="faq-highlight" id="faqEfficiency">--%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">How often is this data updated?</h3>
+                        <div class="faq-answer">
+                            PowerWatchNG aggregates data from official sources including:<br>
+                            • <strong>GenCo data:</strong> Updated from official grid monitoring systems<br>
+                            • <strong>DisCo data:</strong> Updated twice daily (morning 8-9am, evening 6-7pm) from NIGGRID<br><br>
+                            The platform automatically refreshes to display the latest available data. Last update: <span class="faq-highlight" id="faqLastUpdate">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3 class="faq-question">What can I do with PowerWatchNG?</h3>
+                        <div class="faq-answer">
+                            PowerWatchNG provides comprehensive grid intelligence:<br>
+                            • Monitor real-time generation from all power plants<br>
+                            • Track distribution allocation across all 11 DisCos<br>
+                            • View historical trends and performance analytics<br>
+                            • Identify grid collapse events<br>
+                            • Export data for research and analysis<br>
+                            • Understand the complete power value chain from generation to distribution
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Grid Data...</div>
+    </div>
+    
+    <!-- News & Ads Ticker -->
+    <div id="newsAdsTicker">
+        <div id="newsAdsTickerTrack" class="ticker-loading">
+            📡 Loading updates…
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // GLOBAL STATE & CONFIGURATION
+        // ============================================
+        
+        // GenCo Configuration (uses OpenSheet API)
+        const GENCO_CONFIG = {
+            sheetId: '1KVm18-mkOat0YBQudB2wXfUGudLPQvA8K_xbl7AV2R8',
+            sheetName: 'Dashboard',
+            refreshInterval: 300000, // 5 minutes
+            fuelColors: {
+                'GAS': '#0ea5e9',
+                'HYDRO': '#10b981',
+                'STEAM': '#f59e0b'
+            }
+        };
+        
+        // DisCo Configuration (uses OpenSheet API)
+        const DISCO_CONFIG = {
+            sheetId: '1zDXVSrHfXf97nwMkUTWyPQLpaE1HU9n_XQYUFMLDXSk',
+            sheetName: 'Sheet1',
+            liveMWEndpoint: 'https://opensheet.elk.sh/1zDXVSrHfXf97nwMkUTWyPQLpaE1HU9n_XQYUFMLDXSk/LiveMW',
+            refreshInterval: 120000 // 2 minutes
+        };
+        
+        // State
+        let gencoStations = [];
+        let discoGridData = [];
+        let discoLiveMW = 0; // Real-time total allocation from LiveMW endpoint
+        let gencoCharts = {};
+        let discoCharts = {};
+        let autoRefreshGenco = null;
+        let autoRefreshDisco = null;
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            initializeEventListeners();
+            loadAllData();
+            
+            // Setup auto-refresh
+            autoRefreshGenco = setInterval(loadGencoData, GENCO_CONFIG.refreshInterval);
+            autoRefreshDisco = setInterval(loadDiscoData, DISCO_CONFIG.refreshInterval);
+        });
+        
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+                    
+                    // Remove active class from all tabs and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    button.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                    
+                    // Trigger chart redraws if needed
+                    setTimeout(() => {
+                        if (targetTab === 'analytics') {
+                            updateAnalyticsCharts();
+                        }
+                    }, 100);
+                });
+            });
+        }
+        
+        function initializeEventListeners() {
+            document.getElementById('refreshAllBtn').addEventListener('click', loadAllData);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            
+            // Search functionality
+            document.getElementById('gencoSearch').addEventListener('input', function(e) {
+                filterStations(e.target.value);
+            });
+            
+            document.getElementById('discoSearch').addEventListener('input', function(e) {
+                filterDiscos(e.target.value);
+            });
+        }
+        
+        // ============================================
+        // DATA LOADING
+        // ============================================
+        
+        async function loadAllData() {
+            showLoading(true);
+            
+            try {
+                await Promise.all([
+                    loadGencoData(),
+                    loadDiscoData()
+                ]);
+                
+                updateOverview();
+                updateLastUpdateTime();
+                showLoading(false);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load grid data. Please try again.');
+                showLoading(false);
+            }
+        }
+        
+        async function loadGencoData() {
+            try {
+                console.log('Fetching GenCo data from OpenSheet API...');
+                const url = `https://opensheet.elk.sh/${GENCO_CONFIG.sheetId}/${GENCO_CONFIG.sheetName}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Raw GenCo data received:', data);
+                
+                // Process stations data - OpenSheet returns array of objects
+                gencoStations = data
+                    .filter(row => row.Station_ID && row.Station_ID !== 'TOTAL' && !isNaN(row.Station_ID))
+                    .map(row => ({
+                        id: parseInt(row.Station_ID),
+                        name: row.Station_Name || '',
+                        mw: parseFloat(row.Current_MW) || 0,
+                        status: row.Status || 'OFF',
+                        indicator: row.Bulb_Color || '🔴',
+                        lastUpdated: row.Last_Updated || '',
+                        type: getFuelType(row.Station_Name || '')
+                    }));
+                
+                console.log('Processed GenCo stations:', gencoStations.length);
+                updateGenerationView();
+                
+            } catch (error) {
+                console.error('Error loading GenCo data:', error);
+                showError('Failed to load generation data: ' + error.message);
+            }
+        }
+        
+        // Get fuel type from station name
+        function getFuelType(stationName) {
+            if (!stationName) return 'GAS';
+            const name = stationName.toUpperCase();
+            if (name.includes('HYDRO')) return 'HYDRO';
+            if (name.includes('STEAM')) return 'STEAM';
+            return 'GAS';
+        }
+        
+        async function loadDiscoData() {
+            try {
+                // Fetch both historical data and live MW in parallel
+                const [historicalResponse, liveMWResponse] = await Promise.all([
+                    fetch(`https://opensheet.elk.sh/${DISCO_CONFIG.sheetId}/${DISCO_CONFIG.sheetName}`),
+                    fetch(DISCO_CONFIG.liveMWEndpoint)
+                ]);
+                
+                const historicalData = await historicalResponse.json();
+                const liveMWData = await liveMWResponse.json();
+                
+                console.log('Raw DisCo historical data received:', historicalData.length, 'records');
+                console.log('Raw DisCo LiveMW data received:', liveMWData);
+                
+                // Store historical records
+                discoGridData = historicalData;
+                
+                // Fix time formats in all records
+                discoGridData.forEach(record => {
+                    if (record.Time) {
+                        record.Time = fixTimeFormat(record.Time, record.Timeofday);
+                    }
+                });
+                
+                // Extract live total MW
+                if (liveMWData && liveMWData.length > 0 && liveMWData[0].Total_MW) {
+                    discoLiveMW = parseInt(liveMWData[0].Total_MW) || 0;
+                    console.log('Live Total MW:', discoLiveMW);
+                } else {
+                    console.warn('No live MW data available, falling back to latest historical');
+                    const latestHistorical = getLatestDiscoData();
+                    discoLiveMW = latestHistorical.total;
+                }
+                
+                updateDistributionView();
+                console.log('DisCo data loaded:', discoGridData.length, 'records, Live MW:', discoLiveMW);
+                
+            } catch (error) {
+                console.error('Error loading DisCo data:', error);
+                showError('Failed to load distribution data: ' + error.message);
+            }
+        }
+        
+        // Fix time format from DisCo data
+        function fixTimeFormat(timeString, timeOfDay) {
+            if (!timeString) return '';
+            
+            let hours, minutes;
+            
+            // Extract time parts
+            if (/^\d{1,2}:\d{2}:\d{2}$/.test(timeString)) {
+                // Has seconds, remove them
+                const parts = timeString.split(':');
+                hours = parseInt(parts[0]);
+                minutes = parts[1];
+            } else if (/^\d{1,2}:\d{2}$/.test(timeString)) {
+                // Already in HH:MM format
+                const parts = timeString.split(':');
+                hours = parseInt(parts[0]);
+                minutes = parts[1];
+            } else {
+                // Try to extract HH:MM from any string
+                const timeMatch = timeString.match(/(\d{1,2}):(\d{2})/);
+                if (timeMatch) {
+                    hours = parseInt(timeMatch[1]);
+                    minutes = timeMatch[2];
+                } else {
+                    return timeString;
+                }
+            }
+            
+            // Pad hours
+            const paddedHours = String(hours).padStart(2, '0');
+            return `${paddedHours}:${minutes}`;
+        }
+        
+        // Sort data functions for DisCo
+        function sortDataNewestFirst(data) {
+            return [...data].sort((a, b) => {
+                const dateA = parseDateTime(a);
+                const dateB = parseDateTime(b);
+                return dateB - dateA; // Newest first
+            });
+        }
+        
+        function sortDataOldestFirst(data) {
+            return [...data].sort((a, b) => {
+                const dateA = parseDateTime(a);
+                const dateB = parseDateTime(b);
+                return dateA - dateB; // Oldest first
+            });
+        }
+        
+        function parseDateTime(record) {
+            const dateStr = record.Date || '';
+            const timeStr = record.Time || '00:00';
+            const timeOfDay = record.Timeofday || '';
+            
+            // Handle DD/MM/YYYY format
+            if (dateStr.includes('/')) {
+                const [day, month, year] = dateStr.split('/');
+                const dateFormatted = `${year}-${month}-${day}`;
+                const timeFormatted = fixTimeFormat(timeStr, timeOfDay);
+                return new Date(`${dateFormatted}T${timeFormatted}:00`);
+            }
+            
+            // Handle other formats
+            const timeFormatted = fixTimeFormat(timeStr, timeOfDay);
+            return new Date(`${dateStr}T${timeFormatted}:00`);
+        }
+        
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '';
+            
+            // If already in DD/MM/YYYY format, return as is
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+                return dateStr;
+            }
+            
+            // Convert from other formats
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        // ============================================
+        // OVERVIEW TAB UPDATES
+        // ============================================
+        
+        function updateOverview() {
+            // Calculate totals
+            const totalGen = gencoStations.reduce((sum, station) => sum + station.mw, 0);
+            const totalDisco = discoLiveMW; // Use real-time LiveMW value
+            const activePlants = gencoStations.filter(s => s.status === 'ON').length;
+            const efficiency = totalDisco > 0 && totalGen > 0 ? ((totalDisco / totalGen) * 100).toFixed(1) : 0;
+            
+            // Update stats
+            document.getElementById('totalGeneration').textContent = formatNumber(totalGen) + ' MW';
+            document.getElementById('totalDistribution').textContent = formatNumber(totalDisco) + ' MW';
+            document.getElementById('activePlants').textContent = activePlants;
+            document.getElementById('plantsStatus').textContent = `${activePlants} of ${gencoStations.length} online`;
+            document.getElementById('gridEfficiency').textContent = efficiency + '%';
+            
+            // Update grid status
+            updateGridStatus(totalGen, totalDisco);
+            
+            // Update comparison table
+            updateComparisonTable(totalGen, totalDisco);
+            
+            // Update charts
+            updateOverviewCharts();
+            
+            // Update FAQ data
+            updateFAQData(totalGen, totalDisco, activePlants, efficiency);
+            
+            // Update analytics charts if data is available (for when analytics tab is opened later)
+            if (discoGridData.length > 0 && gencoStations.length > 0) {
+                updateAnalyticsCharts();
+            }
+        }
+        
+        function updateGridStatus(totalGen, totalDisco) {
+            const pulse = document.getElementById('gridStatusPulse');
+            const text = document.getElementById('gridStatusText');
+            
+            if (totalDisco === 0) {
+                pulse.className = 'status-pulse offline';
+                text.textContent = 'Grid Collapsed';
+            } else if (totalDisco < 1000) {
+                pulse.className = 'status-pulse weak';
+                text.textContent = 'Weak Grid';
+            } else {
+                pulse.className = 'status-pulse online';
+                text.textContent = 'Grid Operational';
+            }
+        }
+        
+        function updateComparisonTable(totalGen, totalDisco) {
+            document.getElementById('compGenTotal').textContent = formatNumber(totalGen) + ' MW';
+            document.getElementById('compDiscoTotal').textContent = formatNumber(totalDisco) + ' MW';
+            
+            const difference = totalGen - totalDisco;
+            const lossPercent = totalGen > 0 ? ((difference / totalGen) * 100).toFixed(1) : 0;
+            
+            document.getElementById('compStatus').innerHTML = `
+                <span class="${difference > 0 ? 'trend-down' : 'trend-up'}">
+                    ${Math.abs(difference).toFixed(2)} MW loss (${lossPercent}%)
+                </span>
+            `;
+        }
+        
+        function updateOverviewCharts() {
+            // Fuel type distribution chart
+            updateFuelTypeChart();
+            
+            // DisCo distribution chart
+            updateDiscoDistributionChart();
+        }
+        
+        function updateFuelTypeChart() {
+            const fuelTypes = {};
+            gencoStations.forEach(station => {
+                if (station.mw > 0) {
+                    fuelTypes[station.type] = (fuelTypes[station.type] || 0) + station.mw;
+                }
+            });
+            
+            const series = Object.values(fuelTypes);
+            const labels = Object.keys(fuelTypes);
+            const colors = labels.map(type => GENCO_CONFIG.fuelColors[type] || '#64748b');
+            
+            if (gencoCharts.fuelType) {
+                gencoCharts.fuelType.destroy();
+            }
+            
+            const options = {
+                series: series,
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#94a3b8'
+                },
+                colors: colors,
+                labels: labels,
+                legend: {
+                    position: 'bottom',
+                    labels: { colors: '#94a3b8' }
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total MW',
+                                    fontSize: '14px',
+                                    color: '#0ea5e9',
+                                    formatter: function(w) {
+                                        const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                        return total.toFixed(2) + ' MW';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                dataLabels: { enabled: false },
+                stroke: { show: true, width: 2, colors: ['#1e293b'] },
+                tooltip: {
+                    theme: 'dark',
+                    y: { formatter: function(val) { return val.toFixed(2) + ' MW'; } }
+                }
+            };
+            
+            gencoCharts.fuelType = new ApexCharts(document.getElementById('fuelTypeChart'), options);
+            gencoCharts.fuelType.render();
+        }
+        
+        function updateDiscoDistributionChart() {
+            const latestDisco = getLatestDiscoData();
+            if (!latestDisco.allocations) return;
+            
+            // Get top 5 DisCos
+            const sorted = Object.entries(latestDisco.allocations)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const categories = sorted.map(item => item[0]);
+            const data = sorted.map(item => item[1]);
+            
+            if (discoCharts.distribution) {
+                discoCharts.distribution.destroy();
+            }
+            
+            const options = {
+                series: [{
+                    name: 'Allocation',
+                    data: data
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#94a3b8',
+                    toolbar: { show: false }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 8,
+                        horizontal: true,
+                        distributed: true
+                    }
+                },
+                colors: ['#0ea5e9', '#10b981', '#fbbf24', '#f59e0b', '#ef4444'],
+                dataLabels: { enabled: false },
+                xaxis: {
+                    categories: categories,
+                    labels: { style: { colors: '#94a3b8' } }
+                },
+                yaxis: {
+                    labels: { style: { colors: '#94a3b8' } }
+                },
+                grid: {
+                    borderColor: '#334155',
+                    strokeDashArray: 3
+                },
+                tooltip: {
+                    theme: 'dark',
+                    y: { formatter: function(val) { return val.toFixed(2) + ' MW'; } }
+                },
+                legend: { show: false }
+            };
+            
+            discoCharts.distribution = new ApexCharts(document.getElementById('discoChart'), options);
+            discoCharts.distribution.render();
+        }
+        
+        // ============================================
+        // GENERATION TAB UPDATES
+        // ============================================
+        
+        function updateGenerationView() {
+            const totalOutput = gencoStations.reduce((sum, s) => sum + s.mw, 0);
+            const onlinePlants = gencoStations.filter(s => s.status === 'ON').length;
+            const offlinePlants = gencoStations.filter(s => s.status === 'OFF').length;
+            
+            document.getElementById('genTotalOutput').textContent = formatNumber(totalOutput) + ' MW';
+            document.getElementById('genOnlinePlants').textContent = onlinePlants;
+            document.getElementById('genOfflinePlants').textContent = offlinePlants;
+            
+            // Update station grid
+            updateStationGrid();
+            
+            // Update top stations chart
+            updateTopStationsChart();
+            
+            // Update system health
+            updateSystemHealth();
+            
+            // Update regional distribution
+            updateRegionalDistribution();
+        }
+        
+        function updateSystemHealth() {
+            const totalMW = gencoStations.reduce((sum, s) => sum + s.mw, 0);
+            const activeCount = gencoStations.filter(s => s.status === 'ON').length;
+            const totalStations = gencoStations.length;
+            const maxCapacity = 12522; // Nigeria's installed capacity
+            
+            // Grid Stability - based on active stations
+            const stability = Math.min(100, (activeCount / totalStations) * 100);
+            
+            // Generation Capacity - actual vs max capacity
+            const capacity = Math.min(100, (totalMW / maxCapacity) * 100);
+            
+            // Station Availability
+            const availability = (activeCount / totalStations) * 100;
+            
+            // Fuel Diversity - number of fuel types in use
+            const fuelTypes = new Set(gencoStations.filter(s => s.mw > 0).map(s => s.type));
+            const diversity = (fuelTypes.size / 3) * 100; // 3 types: GAS, HYDRO, STEAM
+            
+            updateHealthBar('stabilityBar', 'stabilityValue', stability);
+            updateHealthBar('capacityBar', 'capacityValue', capacity);
+            updateHealthBar('availabilityBar', 'availabilityValue', availability);
+            updateHealthBar('diversityBar', 'diversityValue', diversity);
+        }
+        
+        function updateHealthBar(barId, valueId, percentage) {
+            const bar = document.getElementById(barId);
+            const value = document.getElementById(valueId);
+            
+            if (bar && value) {
+                bar.style.width = `${percentage}%`;
+                value.textContent = `${percentage.toFixed(0)}%`;
+            }
+        }
+        
+        function updateRegionalDistribution() {
+            const regions = {
+                'North': [
+                    'Shiroro', 'Kainji', 'Jebba', 'Zungeru', 'Kashimbila', 
+                    'Dadin Kowa', 'Geregu'
+                ],
+                'South-South': [
+                    'Afam', 'Trans-Amadi', 'Rivers', 'Omoku', 'Sapele', 
+                    'Okpai', 'Delta', 'Ogorode', 'Ibom', 'Ihovbor', 
+                    'Azura', 'Gbarain'
+                ],
+                'South-East': [
+                    'Alaoji', 'Odukpani'
+                ],
+                'South-West': [
+                    'Egbin', 'Olorunsogo', 'Paras', 'Omotosho', 'Taopex'
+                ]
+            };
+            
+            const regionData = {};
+            
+            Object.keys(regions).forEach(region => {
+                const regionStations = gencoStations.filter(s => 
+                    regions[region].some(name => s.name.toUpperCase().includes(name.toUpperCase()))
+                );
+                
+                regionData[region] = {
+                    mw: regionStations.reduce((sum, s) => sum + s.mw, 0),
+                    count: regionStations.filter(s => s.mw > 0).length,
+                    total: regionStations.length
+                };
+            });
+            
+            const container = document.getElementById('regionGrid');
+            if (!container) {
+                console.error('Region grid container not found');
+                return;
+            }
+            
+            container.innerHTML = Object.entries(regionData).map(([region, data]) => `
+                <div class="region-item">
+                    <div class="region-name">${region}</div>
+                    <div class="region-stats">
+                        <div class="region-output">${data.mw.toFixed(1)} MW</div>
+                        <div class="region-stations">${data.count}/${data.total} Active</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            console.log('Regional distribution updated:', regionData);
+        }
+        
+        function updateStationGrid() {
+            const grid = document.getElementById('stationGrid');
+            grid.innerHTML = gencoStations.map(station => `
+                <div class="station-card ${station.status.toLowerCase() === 'on' ? 'online' : 'offline'}">
+                    <div class="station-name">${station.name}</div>
+                    <div class="station-type">
+                        <i class="fas fa-${station.type === 'HYDRO' ? 'water' : 'fire'}"></i>
+                        ${station.type}
+                    </div>
+                    <div class="station-output">${station.mw.toFixed(2)} MW</div>
+                    <div class="stat-trend ${station.status === 'ON' ? 'trend-up' : 'trend-neutral'}">
+                        <i class="fas fa-circle"></i> ${station.status}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateTopStationsChart() {
+            const topStations = gencoStations
+                .filter(s => s.mw > 0)
+                .sort((a, b) => b.mw - a.mw)
+                .slice(0, 5);
+            
+            if (gencoCharts.topStations) {
+                gencoCharts.topStations.destroy();
+            }
+            
+            const options = {
+                series: [{
+                    name: 'Output',
+                    data: topStations.map(s => s.mw)
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#94a3b8',
+                    toolbar: { show: false }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 8,
+                        horizontal: true,
+                        distributed: true
+                    }
+                },
+                colors: ['#0ea5e9', '#10b981', '#fbbf24', '#f59e0b', '#ef4444'],
+                dataLabels: { enabled: false },
+                xaxis: {
+                    categories: topStations.map(s => s.name),
+                    labels: { style: { colors: '#94a3b8' } }
+                },
+                yaxis: {
+                    labels: { style: { colors: '#94a3b8' } }
+                },
+                grid: {
+                    borderColor: '#334155',
+                    strokeDashArray: 3
+                },
+                tooltip: {
+                    theme: 'dark',
+                    y: { formatter: function(val) { return val.toFixed(2) + ' MW'; } }
+                },
+                legend: { show: false }
+            };
+            
+            gencoCharts.topStations = new ApexCharts(document.getElementById('topStationsChart'), options);
+            gencoCharts.topStations.render();
+        }
+        
+        function filterStations(searchTerm) {
+            const filtered = gencoStations.filter(station => 
+                station.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            const grid = document.getElementById('stationGrid');
+            grid.innerHTML = filtered.map(station => `
+                <div class="station-card ${station.status.toLowerCase() === 'on' ? 'online' : 'offline'}">
+                    <div class="station-name">${station.name}</div>
+                    <div class="station-type">
+                        <i class="fas fa-${station.type === 'HYDRO' ? 'water' : 'fire'}"></i>
+                        ${station.type}
+                    </div>
+                    <div class="station-output">${station.mw.toFixed(2)} MW</div>
+                    <div class="stat-trend ${station.status === 'ON' ? 'trend-up' : 'trend-neutral'}">
+                        <i class="fas fa-circle"></i> ${station.status}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ============================================
+        // DISTRIBUTION TAB UPDATES
+        // ============================================
+        
+        function updateDistributionView() {
+            const totalAllocation = discoLiveMW; // Use real-time LiveMW value
+            const averagePerDisco = Math.round(totalAllocation / 11);
+            const peakToday = calculatePeakToday();
+            
+            document.getElementById('discoTotalAllocation').textContent = formatNumber(totalAllocation) + ' MW';
+            document.getElementById('discoAverage').textContent = formatNumber(averagePerDisco) + ' MW';
+            document.getElementById('discoPeak').textContent = formatNumber(peakToday) + ' MW';
+            
+            // Update DisCo table (using historical data for breakdown)
+            const latestDisco = getLatestDiscoData();
+            updateDiscoTable(latestDisco);
+            
+            // Update trend chart
+            updateDiscoTrendChart();
+        }
+        
+        function updateDiscoTable(latestDisco) {
+            if (!latestDisco.allocations) return;
+            
+            const tbody = document.getElementById('discoTableBody');
+            const total = discoLiveMW; // Use real-time LiveMW value for percentage calculations
+            
+            const rows = Object.entries(latestDisco.allocations)
+                .sort((a, b) => b[1] - a[1])
+                .map(([disco, allocation]) => {
+                    const percentage = total > 0 ? ((allocation / total) * 100).toFixed(1) : 0;
+                    return `
+                        <tr>
+                            <td><strong>${disco}</strong></td>
+                            <td>${formatNumber(allocation)} MW</td>
+                            <td>${percentage}%</td>
+                            <td><span class="trend-neutral">Stable</span></td>
+                        </tr>
+                    `;
+                });
+            
+            tbody.innerHTML = rows.join('');
+        }
+        
+        function updateDiscoTrendChart() {
+            if (discoGridData.length === 0) return;
+            
+            // Get last 24 hours of data
+            const sortedData = sortDataOldestFirst(discoGridData).slice(-24);
+            
+            const categories = sortedData.map(d => {
+                const date = formatDateForDisplay(d.Date);
+                const time = fixTimeFormat(d.Time, d.Timeofday);
+                return window.innerWidth < 768 ? `${date}\n${time}` : `${date} ${time}`;
+            });
+            const data = sortedData.map(d => parseInt(d.Total) || 0);
+            
+            if (discoCharts.trend) {
+                discoCharts.trend.destroy();
+            }
+            
+            const options = {
+                series: [{
+                    name: 'Total Allocation',
+                    data: data
+                }],
+                chart: {
+                    type: 'area',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#94a3b8',
+                    toolbar: { show: false }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.1,
+                        stops: [0, 90, 100]
+                    }
+                },
+                colors: ['#0ea5e9'],
+                dataLabels: { enabled: false },
+                xaxis: {
+                    categories: categories,
+                    labels: {
+                        style: { colors: '#94a3b8' },
+                        rotate: -45
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: { colors: '#94a3b8' },
+                        formatter: function(val) { return val.toFixed(0) + ' MW'; }
+                    }
+                },
+                grid: {
+                    borderColor: '#334155',
+                    strokeDashArray: 3
+                },
+                tooltip: {
+                    theme: 'dark',
+                    y: { formatter: function(val) { return val.toFixed(2) + ' MW'; } }
+                }
+            };
+            
+            discoCharts.trend = new ApexCharts(document.getElementById('discoTrendChart'), options);
+            discoCharts.trend.render();
+        }
+        
+        function filterDiscos(searchTerm) {
+            const latestDisco = getLatestDiscoData();
+            if (!latestDisco.allocations) return;
+            
+            const filtered = Object.entries(latestDisco.allocations)
+                .filter(([disco]) => disco.toLowerCase().includes(searchTerm.toLowerCase()))
+                .sort((a, b) => b[1] - a[1]);
+            
+            const tbody = document.getElementById('discoTableBody');
+            const total = discoLiveMW; // Use real-time LiveMW value
+            
+            const rows = filtered.map(([disco, allocation]) => {
+                const percentage = total > 0 ? ((allocation / total) * 100).toFixed(1) : 0;
+                return `
+                    <tr>
+                        <td><strong>${disco}</strong></td>
+                        <td>${formatNumber(allocation)} MW</td>
+                        <td>${percentage}%</td>
+                        <td><span class="trend-neutral">Stable</span></td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = rows.join('');
+        }
+        
+        // ============================================
+        // ANALYTICS TAB
+        // ============================================
+        
+        function updateAnalyticsCharts() {
+            updateHistoricalChart();
+            updateGenerationTypeChart();
+            updatePerformanceMetrics();
+        }
+        
+        function updateHistoricalChart() {
+            const chartElement = document.getElementById('historicalChart');
+            
+            if (discoGridData.length === 0) {
+                console.log('No historical data available for chart yet');
+                // Show loading/empty state
+                chartElement.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 400px; color: var(--text-secondary);">
+                        <div style="text-align: center;">
+                            <i class="fas fa-chart-line fa-3x" style="margin-bottom: 1rem; opacity: 0.3;"></i>
+                            <p>Loading historical data...</p>
+                            <small>Chart will display once DisCo data is loaded</small>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Clear any loading state
+            chartElement.innerHTML = '';
+            
+            // Get last 30 data points (sorted oldest first for chronological display)
+            const sortedData = sortDataOldestFirst(discoGridData).slice(-30);
+            
+            // Prepare data for chart
+            const categories = sortedData.map(d => {
+                const date = formatDateForDisplay(d.Date);
+                const time = fixTimeFormat(d.Time, d.Timeofday);
+                return window.innerWidth < 768 ? `${date}` : `${date} ${time}`;
+            });
+            
+            const distributionData = sortedData.map(d => parseInt(d.Total) || 0);
+            
+            // Calculate generation trend (we'll use a simple average based on current generation)
+            const totalGen = gencoStations.reduce((sum, s) => sum + s.mw, 0);
+            const generationData = sortedData.map(() => totalGen); // Simulated - in production would be historical GenCo data
+            
+            if (gencoCharts.historical) {
+                gencoCharts.historical.destroy();
+            }
+            
+            const options = {
+                series: [
+                    {
+                        name: 'Generation (GenCos)',
+                        data: generationData,
+                        type: 'line'
+                    },
+                    {
+                        name: 'Distribution (DisCos)',
+                        data: distributionData,
+                        type: 'area'
+                    }
+                ],
+                chart: {
+                    height: 400,
+                    background: 'transparent',
+                    foreColor: '#94a3b8',
+                    toolbar: { show: true }
+                },
+                colors: ['#fbbf24', '#0ea5e9'],
+                stroke: {
+                    curve: 'smooth',
+                    width: [3, 2]
+                },
+                fill: {
+                    type: ['solid', 'gradient'],
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.4,
+                        opacityTo: 0.1,
+                        stops: [0, 90, 100]
+                    }
+                },
+                dataLabels: { enabled: false },
+                xaxis: {
+                    categories: categories,
+                    labels: {
+                        style: { colors: '#94a3b8' },
+                        rotate: -45,
+                        rotateAlways: true
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Power (MW)',
+                        style: { color: '#94a3b8' }
+                    },
+                    labels: {
+                        style: { colors: '#94a3b8' },
+                        formatter: function(val) { return val.toFixed(0) + ' MW'; }
+                    }
+                },
+                grid: {
+                    borderColor: '#334155',
+                    strokeDashArray: 3
+                },
+                legend: {
+                    position: 'top',
+                    labels: { colors: '#94a3b8' }
+                },
+                tooltip: {
+                    theme: 'dark',
+                    shared: true,
+                    intersect: false,
+                    y: {
+                        formatter: function(val) { return val.toFixed(2) + ' MW'; }
+                    }
+                }
+            };
+            
+            gencoCharts.historical = new ApexCharts(chartElement, options);
+            gencoCharts.historical.render();
+            
+            console.log('Historical chart rendered with', sortedData.length, 'data points');
+        }
+        
+        function updateGenerationTypeChart() {
+            const fuelTypes = {};
+            gencoStations.forEach(station => {
+                fuelTypes[station.type] = (fuelTypes[station.type] || 0) + station.mw;
+            });
+            
+            if (gencoCharts.generationType) {
+                gencoCharts.generationType.destroy();
+            }
+            
+            const options = {
+                series: Object.values(fuelTypes),
+                chart: {
+                    type: 'pie',
+                    height: 350,
+                    background: 'transparent',
+                    foreColor: '#94a3b8'
+                },
+                labels: Object.keys(fuelTypes),
+                colors: Object.keys(fuelTypes).map(type => GENCO_CONFIG.fuelColors[type] || '#64748b'),
+                legend: {
+                    position: 'bottom',
+                    labels: { colors: '#94a3b8' }
+                },
+                tooltip: {
+                    theme: 'dark',
+                    y: { formatter: function(val) { return val.toFixed(2) + ' MW'; } }
+                }
+            };
+            
+            gencoCharts.generationType = new ApexCharts(document.getElementById('generationTypeChart'), options);
+            gencoCharts.generationType.render();
+        }
+        
+        function updatePerformanceMetrics() {
+            const totalGen = gencoStations.reduce((sum, s) => sum + s.mw, 0);
+            const installedCapacity = 12522; // Nigeria's total installed capacity
+            const utilization = ((totalGen / installedCapacity) * 100).toFixed(1);
+            const losses = totalGen - discoLiveMW; // Use real-time LiveMW value
+            
+            document.getElementById('installedCapacity').textContent = formatNumber(installedCapacity) + ' MW';
+            document.getElementById('utilizationRate').textContent = utilization + '%';
+            document.getElementById('gridLosses').textContent = formatNumber(losses) + ' MW';
+        }
+        
+        // ============================================
+        // FAQ TAB
+        // ============================================
+        
+        function updateFAQData(totalGen, totalDisco, activePlants, efficiency) {
+            // Use current system time since LiveMW is real-time
+            const now = new Date();
+            
+            // Format: DD/MM/YYYY HH:MM
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${day}/${month}/${year} ${hours}:${minutes}`;
+            
+            document.getElementById('faqCurrentPower').textContent = formatNumber(discoLiveMW) + ' MW';
+            document.getElementById('faqUpdateTime').textContent = currentTime;
+            document.getElementById('faqGeneration').textContent = formatNumber(totalGen) + ' MW';
+            document.getElementById('faqDistribution').textContent = formatNumber(discoLiveMW) + ' MW';
+            document.getElementById('faqActivePlants').textContent = activePlants;
+            document.getElementById('faqEfficiency').textContent = efficiency + '%';
+            document.getElementById('faqLastUpdate').textContent = currentTime;
+            
+            // Determine collapse status using real-time value
+            const isCollapsed = discoLiveMW === 0;
+            document.getElementById('faqCollapseStatus').textContent = isCollapsed ? 'Yes (Grid Collapsed)' : 'No (Grid Operational)';
+        }
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        function getLatestDiscoData() {
+            if (discoGridData.length === 0) return { total: 0, allocations: {}, timestamp: 'Unknown' };
+            
+            const sorted = sortDataNewestFirst(discoGridData);
+            const latest = sorted[0];
+            const allocations = {};
+            let total = 0;
+            
+            // Extract DisCo allocations from the latest record
+            const discoFields = ['AbuyaDisCo', 'AbujaDisCo', 'EkoDisCo', 'IkejaDisCo', 'IbadanDisCo', 
+                                'BeninDisCo', 'EnuguDisCo', 'PHarcourtDisCo', 'KadunaDisCo', 
+                                'JosDisCo', 'YolaDisCo', 'KanoDisCo'];
+            
+            discoFields.forEach(field => {
+                if (latest[field]) {
+                    const value = parseInt(latest[field]) || 0;
+                    if (value > 0) {
+                        const discoName = field.replace('DisCo', '');
+                        allocations[discoName] = value;
+                        total += value;
+                    }
+                }
+            });
+            
+            // Format timestamp
+            const displayDate = formatDateForDisplay(latest.Date);
+            const displayTime = fixTimeFormat(latest.Time, latest.Timeofday);
+            
+            return {
+                total: parseInt(latest.Total) || total,
+                allocations: allocations,
+                timestamp: `${displayDate} ${displayTime}`
+            };
+        }
+        
+        function calculatePeakToday() {
+            const today = new Date();
+            const todayFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+            const todayData = discoGridData.filter(d => d.Date === todayFormatted);
+            
+            if (todayData.length === 0) {
+                // If no data for today, return overall peak
+                return Math.max(...discoGridData.map(d => parseInt(d.Total) || 0));
+            }
+            
+            return Math.max(...todayData.map(d => parseInt(d.Total) || 0));
+        }
+        
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('en-US');
+        }
+        
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).replace(',', '');
+            document.getElementById('lastUpdateTime').textContent = timeStr;
+        }
+        
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = show ? 'flex' : 'none';
+        }
+        
+        function showError(message) {
+            console.error('Error:', message);
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: var(--alert-red);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        function exportData() {
+            const exportData = {
+                genco: gencoStations.map(s => ({
+                    name: s.name,
+                    type: s.type,
+                    mw: s.mw,
+                    status: s.status
+                })),
+                disco: discoGridData,
+                timestamp: new Date().toISOString(),
+                summary: {
+                    totalGeneration: gencoStations.reduce((sum, s) => sum + s.mw, 0),
+                    totalDistribution: discoLiveMW, // Use real-time LiveMW value
+                    totalDistributionRealtime: discoLiveMW,
+                    activePlants: gencoStations.filter(s => s.status === 'ON').length
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `PowerWatchNG_Export_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // ============================================
+        // NEWS & ADS TICKER
+        // ============================================
+        
+        const TICKER_CONFIG = {
+            readUrl: 'https://opensheet.elk.sh/14ZolI9fAGMdnuWRAzHjk6wQKNM-_3HyC_Etoug4C5dk/TickerFeed',
+            refreshInterval: 120000, // 2 minutes
+            maxRetries: 3
+        };
+        
+        let tickerRetryCount = 0;
+        
+        async function loadTicker() {
+            try {
+                const res = await fetch(TICKER_CONFIG.readUrl);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                
+                const data = await res.json();
+                const now = new Date();
+                
+                // Filter only valid, live, non-expired items
+                const activeItems = data.filter(item => {
+                    // Must be active status
+                    if (item.status !== "active") return false;
+                    
+                    // Check start time
+                    if (item.start_time && new Date(item.start_time) > now) return false;
+                    
+                    // Check end time
+                    if (item.end_time && new Date(item.end_time) < now) return false;
+                    
+                    // Check expiry date
+                    if (item.expiry_date && new Date(item.expiry_date) < now) return false;
+                    
+                    return true;
+                }).sort((a, b) => b.priority - a.priority);
+                
+                const track = document.getElementById("newsAdsTickerTrack");
+                
+                // Handle empty state
+                if (activeItems.length === 0) {
+                    track.innerHTML = '<span class="ticker-loading">📢 No active updates at this time</span>';
+                    track.style.animation = 'none';
+                    return;
+                }
+                
+                // Build ticker HTML
+                track.innerHTML = activeItems.map(item => `
+                    <span>
+                        <span class="emoji">${item.type === "ad" ? "📢" : "📰"}</span>
+                        ${item.link
+                            ? `<a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.text}</a>`
+                            : item.text}
+                    </span>
+                `).join("");
+                
+                // Remove loading class
+                track.classList.remove('ticker-loading');
+                
+                // Apply scroll animation
+                applyTickerScrollSpeed(activeItems);
+                
+                // Reset retry count on success
+                tickerRetryCount = 0;
+                
+            } catch (err) {
+                console.warn("Ticker failed to load", err);
+                
+                const track = document.getElementById("newsAdsTickerTrack");
+                
+                // Retry logic
+                if (tickerRetryCount < TICKER_CONFIG.maxRetries) {
+                    tickerRetryCount++;
+                    track.innerHTML = `<span class="ticker-loading">⏳ Retrying... (${tickerRetryCount}/${TICKER_CONFIG.maxRetries})</span>`;
+                    setTimeout(loadTicker, 5000); // Retry after 5 seconds
+                } else {
+                    track.innerHTML = '<span class="ticker-loading">⚠️ Ticker temporarily unavailable</span>';
+                }
+            }
+        }
+        
+        function applyTickerScrollSpeed(items) {
+            const track = document.getElementById("newsAdsTickerTrack");
+            const containerWidth = window.innerWidth;
+            const textWidth = track.scrollWidth;
+            
+            // Base speed (px/sec)
+            let pxPerSecond = 80;
+            
+            // Adjust based on item speed settings
+            if (items.some(i => i.speed === "fast")) pxPerSecond = 120;
+            if (items.some(i => i.speed === "slow")) pxPerSecond = 50;
+            
+            // Calculate duration for smooth scroll
+            const duration = (containerWidth + textWidth) / pxPerSecond;
+            
+            track.style.animation = `tickerScroll ${duration}s linear infinite`;
+        }
+        
+        // Pause animation when tab is not visible to save resources
+        document.addEventListener('visibilitychange', () => {
+            const track = document.getElementById("newsAdsTickerTrack");
+            if (document.hidden) {
+                track.style.animationPlayState = 'paused';
+            } else {
+                track.style.animationPlayState = 'running';
+                // Refresh ticker when tab becomes visible
+                loadTicker();
+            }
+        });
+        
+        // Initialize ticker
+        loadTicker();
+        
+        // Periodic refresh
+        setInterval(loadTicker, TICKER_CONFIG.refreshInterval);
+        
+        // Reload on window resize to recalculate scroll speed
+        let tickerResizeTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(tickerResizeTimer);
+            tickerResizeTimer = setTimeout(loadTicker, 250);
+        });
+    </script>
+</body>
+</html>
