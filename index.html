@@ -1587,6 +1587,27 @@
             // Setup auto-refresh
             autoRefreshGenco = setInterval(loadGencoData, GENCO_CONFIG.refreshInterval);
             autoRefreshDisco = setInterval(loadDiscoData, DISCO_CONFIG.refreshInterval);
+            
+            // Additional faster retry for LiveMW specifically (every 30 seconds)
+            setInterval(async () => {
+                try {
+                    const response = await fetch(DISCO_CONFIG.liveMWEndpoint);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.length > 0 && data[0].Total_MW) {
+                            const newLiveMW = parseInt(data[0].Total_MW) || 0;
+                            if (newLiveMW !== discoLiveMW && newLiveMW > 0) {
+                                discoLiveMW = newLiveMW;
+                                console.log('🔄 LiveMW updated:', discoLiveMW, 'MW');
+                                updateDistributionView();
+                                updateOverview();
+                            }
+                        }
+                    }
+                } catch (err) {
+                    // Silently fail, main refresh will handle it
+                }
+            }, 30000);
         });
         
         function initializeTabs() {
@@ -1697,17 +1718,19 @@
         
         async function loadDiscoData() {
             try {
+                console.log('Loading DisCo data...');
+                
                 // Fetch both historical data and live MW in parallel
                 const [historicalResponse, liveMWResponse] = await Promise.all([
                     fetch(`https://opensheet.elk.sh/${DISCO_CONFIG.sheetId}/${DISCO_CONFIG.sheetName}`),
-                    fetch(DISCO_CONFIG.liveMWEndpoint)
+                    fetch(DISCO_CONFIG.liveMWEndpoint).catch(err => {
+                        console.warn('LiveMW fetch failed, will use fallback:', err.message);
+                        return null;
+                    })
                 ]);
                 
                 const historicalData = await historicalResponse.json();
-                const liveMWData = await liveMWResponse.json();
-                
-                console.log('Raw DisCo historical data received:', historicalData.length, 'records');
-                console.log('Raw DisCo LiveMW data received:', liveMWData);
+                console.log('✅ DisCo historical data received:', historicalData.length, 'records');
                 
                 // Store historical records
                 discoGridData = historicalData;
@@ -1719,22 +1742,58 @@
                     }
                 });
                 
-                // Extract live total MW
+                // Extract live total MW with enhanced error handling
+                let liveMWData = null;
+                if (liveMWResponse && liveMWResponse.ok) {
+                    try {
+                        liveMWData = await liveMWResponse.json();
+                        console.log('LiveMW API response:', JSON.stringify(liveMWData, null, 2));
+                    } catch (parseError) {
+                        console.error('❌ Failed to parse LiveMW response:', parseError);
+                    }
+                }
+                
                 if (liveMWData && liveMWData.length > 0 && liveMWData[0].Total_MW) {
                     discoLiveMW = parseInt(liveMWData[0].Total_MW) || 0;
-                    console.log('Live Total MW:', discoLiveMW);
+                    console.log('✅ Live Total MW fetched successfully:', discoLiveMW, 'MW');
                 } else {
-                    console.warn('No live MW data available, falling back to latest historical');
+                    if (!liveMWResponse) {
+                        console.warn('⚠️ LiveMW API request failed');
+                    } else if (!liveMWResponse.ok) {
+                        console.error('❌ LiveMW API HTTP error! status:', liveMWResponse.status);
+                        console.error('This might mean the LiveMW sheet/tab does not exist in your Google Sheet');
+                        console.error('Please verify that your Google Sheet has a tab named "LiveMW" with a column "Total_MW"');
+                    } else {
+                        console.warn('⚠️ LiveMW API returned unexpected data structure. Expected: [{"Total_MW": "xxxx"}]');
+                        console.warn('Actual response:', liveMWData);
+                    }
+                    
+                    console.warn('📊 Falling back to latest historical data');
                     const latestHistorical = getLatestDiscoData();
                     discoLiveMW = latestHistorical.total;
+                    console.log('📊 Using historical data:', discoLiveMW, 'MW');
                 }
                 
                 updateDistributionView();
                 console.log('DisCo data loaded:', discoGridData.length, 'records, Live MW:', discoLiveMW);
                 
             } catch (error) {
-                console.error('Error loading DisCo data:', error);
+                console.error('❌ Error loading DisCo data:', error);
                 showError('Failed to load distribution data: ' + error.message);
+                
+                // If we have no data at all, try to at least get historical data
+                if (discoGridData.length === 0) {
+                    try {
+                        const response = await fetch(`https://opensheet.elk.sh/${DISCO_CONFIG.sheetId}/${DISCO_CONFIG.sheetName}`);
+                        discoGridData = await response.json();
+                        const latestHistorical = getLatestDiscoData();
+                        discoLiveMW = latestHistorical.total;
+                        console.log('📊 Recovered with historical data only:', discoLiveMW, 'MW');
+                        updateDistributionView();
+                    } catch (recoveryError) {
+                        console.error('❌ Recovery attempt also failed:', recoveryError);
+                    }
+                }
             }
         }
         
@@ -1831,7 +1890,15 @@
         function updateOverview() {
             // Calculate totals
             const totalGen = gencoStations.reduce((sum, station) => sum + station.mw, 0);
-            const totalDisco = discoLiveMW; // Use real-time LiveMW value
+            
+            // Use real-time LiveMW value, fallback to latest historical if 0
+            let totalDisco = discoLiveMW;
+            if (totalDisco === 0 && discoGridData.length > 0) {
+                const latestDisco = getLatestDiscoData();
+                totalDisco = latestDisco.total;
+                console.warn('⚠️ discoLiveMW is 0 in overview, using historical fallback:', totalDisco, 'MW');
+            }
+            
             const activePlants = gencoStations.filter(s => s.status === 'ON').length;
             const efficiency = totalDisco > 0 && totalGen > 0 ? ((totalDisco / totalGen) * 100).toFixed(1) : 0;
             
@@ -2228,7 +2295,14 @@
         // ============================================
         
         function updateDistributionView() {
-            const totalAllocation = discoLiveMW; // Use real-time LiveMW value
+            // Use real-time LiveMW value, fallback to latest historical if 0
+            let totalAllocation = discoLiveMW;
+            if (totalAllocation === 0 && discoGridData.length > 0) {
+                const latestDisco = getLatestDiscoData();
+                totalAllocation = latestDisco.total;
+                console.warn('⚠️ discoLiveMW is 0, using historical fallback:', totalAllocation, 'MW');
+            }
+            
             const averagePerDisco = Math.round(totalAllocation / 11);
             const peakOnRecord = calculatePeakOnRecord();
             
