@@ -1043,6 +1043,9 @@
                         <button class="btn btn-secondary" id="exportBtn">
                             <i class="fas fa-download"></i> Export
                         </button>
+                        <button class="btn btn-secondary" id="shareBtn" style="display: none;">
+                            <i class="fas fa-share-alt"></i> Share
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1356,7 +1359,7 @@
                     <div class="stat-card">
                         <div class="stat-header">
                             <div>
-                                <div class="stat-label">Peak Today</div>
+                                <div class="stat-label">Peak on Record</div>
                             </div>
                             <div class="stat-icon yellow">
                                 <i class="fas fa-arrow-up"></i>
@@ -1615,6 +1618,9 @@
         function initializeEventListeners() {
             document.getElementById('refreshAllBtn').addEventListener('click', loadAllData);
             document.getElementById('exportBtn').addEventListener('click', exportData);
+            
+            // Setup share button
+            setupShareButton();
             
             // Search functionality
             document.getElementById('gencoSearch').addEventListener('input', function(e) {
@@ -2224,11 +2230,11 @@
         function updateDistributionView() {
             const totalAllocation = discoLiveMW; // Use real-time LiveMW value
             const averagePerDisco = Math.round(totalAllocation / 11);
-            const peakToday = calculatePeakToday();
+            const peakOnRecord = calculatePeakOnRecord();
             
             document.getElementById('discoTotalAllocation').textContent = formatNumber(totalAllocation) + ' MW';
             document.getElementById('discoAverage').textContent = formatNumber(averagePerDisco) + ' MW';
-            document.getElementById('discoPeak').textContent = formatNumber(peakToday) + ' MW';
+            document.getElementById('discoPeak').textContent = formatNumber(peakOnRecord) + ' MW';
             
             // Update DisCo table (using historical data for breakdown)
             const latestDisco = getLatestDiscoData();
@@ -2566,8 +2572,35 @@
         function getLatestDiscoData() {
             if (discoGridData.length === 0) return { total: 0, allocations: {}, timestamp: 'Unknown' };
             
+            // Sort data newest first
             const sorted = sortDataNewestFirst(discoGridData);
-            const latest = sorted[0];
+            
+            // Get today's date in DD/MM/YYYY format
+            const today = new Date();
+            const todayFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+            
+            // Try to find today's data
+            let latest = sorted.find(d => d.Date === todayFormatted);
+            
+            if (!latest) {
+                // If no data for today, try yesterday
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayFormatted = `${String(yesterday.getDate()).padStart(2, '0')}/${String(yesterday.getMonth() + 1).padStart(2, '0')}/${yesterday.getFullYear()}`;
+                
+                latest = sorted.find(d => d.Date === yesterdayFormatted);
+                
+                if (!latest) {
+                    // If still no data, use the most recent available
+                    latest = sorted[0];
+                    console.log('Using most recent available data:', latest.Date);
+                } else {
+                    console.log('Using yesterday\'s data:', yesterdayFormatted);
+                }
+            } else {
+                console.log('Using today\'s data:', todayFormatted);
+            }
+            
             const allocations = {};
             let total = 0;
             
@@ -2598,17 +2631,9 @@
             };
         }
         
-        function calculatePeakToday() {
-            const today = new Date();
-            const todayFormatted = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-            const todayData = discoGridData.filter(d => d.Date === todayFormatted);
-            
-            if (todayData.length === 0) {
-                // If no data for today, return overall peak
-                return Math.max(...discoGridData.map(d => parseInt(d.Total) || 0));
-            }
-            
-            return Math.max(...todayData.map(d => parseInt(d.Total) || 0));
+        function calculatePeakOnRecord() {
+            // Return all-time peak from all records
+            return Math.max(...discoGridData.map(d => parseInt(d.Total) || 0));
         }
         
         function formatNumber(num) {
@@ -2655,6 +2680,38 @@
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => notification.remove(), 300);
             }, 5000);
+        }
+        
+        // ============================================
+        // SHARE BUTTON SETUP
+        // ============================================
+        function setupShareButton() {
+            const shareBtn = document.getElementById('shareBtn');
+            
+            // Check if Web Share API is available (native share)
+            if (navigator.share !== undefined) {
+                // Show share button only if native share is available
+                shareBtn.style.display = 'inline-flex';
+                
+                const pageUrl = 'https://cryptonian0xx.github.io/PowerWatchNG/';
+                const shareText = 'Check out Nigeria\'s live power grid status on PowerWatchNG - Complete Grid Intelligence';
+                const shareTitle = 'PowerWatchNG - Nigeria Grid Status';
+                
+                shareBtn.addEventListener('click', () => {
+                    navigator.share({
+                        title: shareTitle,
+                        text: shareText,
+                        url: pageUrl
+                    }).then(() => {
+                        console.log('Shared successfully!');
+                    }).catch((error) => {
+                        console.log('Share cancelled or failed:', error);
+                    });
+                });
+            } else {
+                // Hide share button if Web Share API is not available
+                shareBtn.style.display = 'none';
+            }
         }
         
         function exportData() {
